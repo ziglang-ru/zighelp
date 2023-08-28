@@ -1,13 +1,13 @@
 name: push_on_master_without_pr
 on:
   push:
+    if: github.event.pull_request == null
     branches:
       - master
 permissions:
   contents: write
 jobs:
   test:
-    if: github.event_name == 'push' && github.event.pull_request == null
     strategy:
       matrix:
         # disabling windows-latest for now. zig fmt --check gives strange results

@@ -1,6 +1,8 @@
 name: pr
 on:
   pull_request:
+    branches:
+      - master
   merge_group:
 permissions:
   contents: write
