@@ -27,7 +27,7 @@ jobs:
       - run: |
           # run tests only if this is direct push to master
           # because if from pr, then tests are already run
-          if [ -z "${{ needs.pr.outputs.pr_found }}" == 'false' ]; then
+          if [ "${{ needs.pr.outputs.pr_found }}" == 'false' ]; then
             zig run test-out.zig
             zig test do_tests.zig
             zig fmt --check test-out
