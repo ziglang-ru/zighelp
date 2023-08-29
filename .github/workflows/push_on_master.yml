@@ -6,12 +6,14 @@ on:
 permissions:
   contents: write
 jobs:
+  pr:
+    runs-on: ubuntu-latest
+    outputs:
+      pr_found: ${{ steps.pr.outputs.pr_found }}
+    steps:
+      - uses: 8BitJonny/gh-get-current-pr@2.2.0
+        id: pr
   test:
-    # prevent running this job if it is from direct push, not from pull request
-    # this will still show the workflow and skipped job in the ui.
-    # there is no way currently to not trigger workflow on direct push
-    # oter than Server-side Git Hook
-    if: github.event.before == github.event.after
     strategy:
       matrix:
         # disabling windows-latest for now. zig fmt --check gives strange results
@@ -22,9 +24,13 @@ jobs:
       - uses: actions/checkout@v2
       - uses: goto-bus-stop/setup-zig@v2
       - run: |
-          zig run test-out.zig
-          zig test do_tests.zig
-          zig fmt --check test-out
+          # run tests only if this is direct push to master
+          # because if from pr, then tests are already run
+          if [ -z "${{ needs.pr.outputs.pr_found }}" == 'false' ]; then
+            zig run test-out.zig
+            zig test do_tests.zig
+            zig fmt --check test-out
+          fi
   mkdocs-gh-deploy:
     needs: test
     runs-on: ubuntu-latest
