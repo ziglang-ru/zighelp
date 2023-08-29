@@ -14,6 +14,7 @@ jobs:
       - uses: 8BitJonny/gh-get-current-pr@2.2.0
         id: pr
   test:
+    needs: pr
     strategy:
       matrix:
         # disabling windows-latest for now. zig fmt --check gives strange results
