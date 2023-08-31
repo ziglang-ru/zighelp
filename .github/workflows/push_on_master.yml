@@ -24,10 +24,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: goto-bus-stop/setup-zig@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.4
       - run: |
           # run tests only if this is direct push to master
           # because if from pr, then tests are already run
           if [ "${{ needs.pr.outputs.pr_found }}" == 'false' ]; then
+            pip install -r requirements.txt
+            python translate_ci.py -y
             zig run test-out.zig
             zig test do_tests.zig
             zig fmt --check test-out
@@ -48,4 +53,5 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install -r requirements.txt
+      - run: python translate_ci.py -y
       - run: mkdocs gh-deploy --force
