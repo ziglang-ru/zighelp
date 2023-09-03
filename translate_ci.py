@@ -13,10 +13,10 @@ SNIPPET_DIR = "./docs/snippets/"
 # files to be ignored when traversing the TRANSLATION_DIR
 IGNORE_FILES = ["CNAME", "assets", "stylesheets", "snippets"]
 
-# type aliases
 # dict[language][chapter][snippet_name]
 # dict["no_translation"] includes all chapters with no translations provided
 SnippetsDict = dict[str, dict[str, dict[str, str]]]
+
 # dict[chapter][template_path]
 TemplateDict = dict[str, dict[str, list[str]]]
 
@@ -35,57 +35,41 @@ def main() -> None:
     template_dict: TemplateDict = get_template_dict()
     snippets_dict: SnippetsDict = get_rendered_snippets_dict(template_dict)
 
-    # render files with no translations
-    for language in os.listdir(TRANSLATION_DIR):
-        if language in IGNORE_FILES: continue
-        language_dir = path.join(TRANSLATION_DIR, language)
-        for markdown in os.listdir(language_dir):
-            markdown = path.join(language_dir, markdown)
-            chapter = pathlib.Path(markdown).stem
-            if chapter not in snippets_dict["no_translation"]: continue
-            render_and_write_translation(snippets_dict, markdown, "no_translation", chapter)
-
     # render files with translations
     for language, chapters in snippets_dict.items():
         for chapter in chapters:
-            if language == "no_translation": continue
+            try:
+                language_dir = path.join(TRANSLATION_DIR, language)
+                for markdown in os.listdir(language_dir):
+                    markdown = path.join(language_dir, markdown)
+                    with open(markdown, "r+") as md_file:
+                        md_templ = jinja2.Template(md_file.read())
+                        md_expanded = md_templ.render(
+                            snippets_dict[language][chapter])
+                        md_file.seek(0)
+                        md_file.write(md_expanded)
 
-            for chapter in chapters:
-                try:
-                    language_dir = path.join(TRANSLATION_DIR, language)
-                    for markdown in os.listdir(language_dir):
-                        markdown = path.join(language_dir, markdown)
-                        render_and_write_translation(snippets_dict, markdown, language, chapter)
-
-                except FileNotFoundError:
-                    print(
-                        f"Error: No snippets have been provided for {language}", file=sys.stderr)
-
-def render_and_write_translation(snippets_dict: SnippetsDict,
-                                 markdown_path: str, language: str, chapter: str) -> None:
-    with open(markdown_path, "r+") as md_file:
-        md_templ = jinja2.Template(md_file.read())
-        md_expanded = md_templ.render(
-            snippets_dict[language][chapter])
-        md_file.seek(0)
-        md_file.write(md_expanded)
+            except FileNotFoundError:
+                print(
+                    f"Error: No snippets have been provided for {language}", file=sys.stderr)
 
 
 # renders snippets and inserts them into a dictionary with the following structure
 # structure of the returned dictionary: dict[language][chapter][snippet_name]
 def get_rendered_snippets_dict(template_dict: TemplateDict) -> SnippetsDict:
     snippets_dict: dict[str, dict[str, dict[str, str]]] = dict()
-    # all files that do not provide translation tomls are put here
-    snippets_dict["no_translation"] = dict()
 
+    # temporary dictionary holding all snippets that don't need to be rendered for each language
+    snippets_dict["no_translation"] = dict()
     for chapter, templates in template_dict.items():
-        snippets_dict["no_translation"][chapter] = dict()
 
         for template, translations in templates.items():
             snippet_name = pathlib.Path(template).parent.stem
 
             with open(template, "r") as template_file:
                 if len(translations) == 0:
+                    if chapter not in snippets_dict["no_translation"]:
+                        snippets_dict["no_translation"][chapter] = dict()
                     snippets_dict["no_translation"][chapter][snippet_name] = template_file.read()
                     continue
 
@@ -98,9 +82,28 @@ def get_rendered_snippets_dict(template_dict: TemplateDict) -> SnippetsDict:
                             snippets_dict[language] = dict()
                             snippets_dict[language][chapter] = dict()
                         snippets_dict[language][chapter][snippet_name] = templ.render(data)
+
+
+    # snippets with no translations are copied to all chapter translations
+    # this is necessary as Jinja2 cannot do partial templating, that means that 
+    # unless all data is available in the first run the templates will be made as empty
+    # thus being unable to render the other half of the data
+    for language in snippets_dict:
+        if language == "no_translation": continue
+
+        for chapter_translated in snippets_dict[language]:
+            for chapter_raw, snippets in snippets_dict["no_translation"].items():
+                if chapter_translated == chapter_raw:
+                    for snippet_name in snippets:
+                        snippets_dict[language][chapter][snippet_name] = snippets_dict["no_translation"][chapter][snippet_name]
+
+    del snippets_dict["no_translation"]
+
     return snippets_dict
 
 
+# returns a dictionary in TemplateDict[Chapter][TemplateFile]
+# where the chapter is the chapter name and the template file the path for the snippet
 def get_template_dict() -> TemplateDict:
     translation_dict: dict[str, dict[str, list[str]]] = dict()
     for chapter in os.listdir(SNIPPET_DIR):
