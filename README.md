@@ -48,6 +48,7 @@ Use pyenv to select python version from `.python-version` file.
 $ python -m venv .env
 $ source env/bin/activate
 $ pip install -r requirements.txt
+$ python translate_ci.py
 $ mkdocs serve
 $ deactivate
 ```
@@ -67,6 +68,7 @@ $ pip freeze > requirements.txt
 ## Creating a Pull Request (PR)
 
 When creating a PR, change the default base repository to `zighelp/zighelp`.
+Also make sure to read [CONTRIBUTING](https://github.com/zighelp/zighelp/blob/master/CONTRIBUTING.md) when adding new languages or snippets.
 
 You may also use `gh` to create a correct PR for you:
 
