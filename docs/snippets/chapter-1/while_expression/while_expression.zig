@@ -1,4 +1,4 @@
-test "while" {
+test "{{ while_expression }}" {
     var i: u8 = 2;
     while (i < 100) {
         i *= 2;
