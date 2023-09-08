@@ -10,6 +10,9 @@ extra:
     - name: Русский (Russian)
       link: /ru/
       lang: ru
+    - name: Português (Portuguese)
+      link: /pt/
+      lang: pt
 
 markdown_extensions:
   - admonition
@@ -92,7 +95,18 @@ plugins:
         ru:
           name: Русский (Russian)
           build: true
+        pt:
+          name: Português (Portuguese)
+          build: true
       nav_translations:
         ru:
           Chapter 0 - Getting Started: Глава 0 — Начало работы
           Chapter 1 - Basics: Глава 1 — Основы
+        pt: 
+          Chapter 0 - Getting Started: Capítulo 0 - Començando
+          Chapter 1 - Basics: Capítulo 1 - O básico
+          Chapter 2 - Standard Patterns: Capítulo 2 - Padrões Comuns
+          Chapter 3 - Build system: Capítulo 3 - O sistema de compilação
+          Chapter 4 - Working with C: Capítulo 4 - Trabalhando com C
+          Chapter 5 - Async: Capítulo 5 - Async
+          
