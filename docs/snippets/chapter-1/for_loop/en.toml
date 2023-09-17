@@ -1,0 +1,5 @@
+test_name = "for"
+
+character_literal_as_u8 = "Character literals are equivalent to integer literals"
+current_array_elem = "current array element"
+current_index = "current index"
